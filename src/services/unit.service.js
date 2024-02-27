@@ -46,6 +46,8 @@ const updateUnitService = async(id, reqBody) => {
     } else {
         await updateUnit(id, title);
     }
+
+    return null;
 }
 
 const deleteUnitService = async (id) => {

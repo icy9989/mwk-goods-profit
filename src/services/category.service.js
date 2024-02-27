@@ -6,6 +6,10 @@ const createCategoryService = async(reqBody) => {
 
     const { title } = reqBody;
 
+    if(!title) {
+        throw ApiError.badRequestError("အမျိုးအစား ဖြည့်သွင်းရန်လိုအပ်ပါသည်။")
+    }
+
     const isCategoryExist = await getCategoryByTitle(title);
 
     let category;
@@ -33,6 +37,10 @@ const updateCategoryService = async(id, reqBody) => {
 
     const { title } = reqBody;
 
+    if(!title) {
+        throw ApiError.badRequestError("အမျိုးအစား ဖြည့်သွင်းရန်လိုအပ်ပါသည်။")
+    }
+
     const category = await getCategoryById(id);
     
     if(!category) {
@@ -46,6 +54,8 @@ const updateCategoryService = async(id, reqBody) => {
     } else {
         await updateCategory(id, title);
     }
+
+    return null;
 }
 
 const deleteCategoryService = async (id) => {

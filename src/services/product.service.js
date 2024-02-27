@@ -45,6 +45,8 @@ const updateProductService = async(id, reqBody) => {
     } else {
         await updateProduct(id,name,category.id,unit.id,percentage);
     }
+
+    return null;
 }
 
 const deleteProductService = async (id) => {

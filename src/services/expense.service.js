@@ -46,6 +46,8 @@ const updateExpenseService = async(id, reqBody) => {
     } else {
         await updateExpense(id, title);
     }
+
+    return null;
 }
 
 const deleteExpenseService = async(id) => {
