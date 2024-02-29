@@ -7,6 +7,7 @@ const { loginRouter } = require("./routes/auth.user.route");
 const { categoryRouter } = require("./routes/category.route");
 const { unitRouter } = require("./routes/unit.route");
 const { productRouter } = require("./routes/product.route");
+const { saleTransactionRouter } = require("./routes/sale_transaction.route"); 
 const { expenseRouter } = require("./routes/expense.route");
 const { expenseTransactionRouter } = require("./routes/expense_transaction.route")
 
@@ -29,6 +30,7 @@ loginRouter(app);
 categoryRouter(app);
 unitRouter(app);
 productRouter(app);
+saleTransactionRouter(app);
 expenseRouter(app);
 expenseTransactionRouter(app);
 

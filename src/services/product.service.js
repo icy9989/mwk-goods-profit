@@ -1,5 +1,7 @@
 const ApiError = require("../config/customError.config");
 const { getProductByName, createProduct, getProductById, updateProduct, getProducts, deleteProduct } = require("../database/providers/product.provider");
+const { getCategoryById } = require("../database/providers/category.provider");
+const { getUnitById } = require("../database/providers/unit.provider");
 
 const createProductService = async(reqBody) => {
 
@@ -65,10 +67,37 @@ const deleteProductService = async (id) => {
 const getProductsService = async () => {
     const { count, rows: products } = await getProducts();
 
-    return {
-        totalProduct: count,
-        products
-    }
+    const productList = [];
+
+    if(products.length < 1) {
+        return {
+            totalProduct: count,
+            products
+        }
+    } else {
+        for(let product of products) {
+            let data = {};
+            data.id = product.id;
+            data.name = product.name;
+            const cartegory = await getCategoryById(product.categoryId);
+            data.category = {
+                id: cartegory.id,
+                title: cartegory.title
+            }
+            const unit = await getUnitById(product.unitId);
+            data.unit = {
+                id: unit.id,
+                title: unit.title
+            }
+            data.percentage = product.percentage;
+            productList.push(data);
+        }
+
+        return {
+            totalProduct: count,
+            products: productList
+        }
+    }   
 }
 
 module.exports = {
