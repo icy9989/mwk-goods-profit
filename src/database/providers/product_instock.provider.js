@@ -9,12 +9,10 @@ const createProductInstock = async (productId,instock,buyUnitPrice) => {
     }).save()
 }
 
-const updateProductInstock = async (id,productId,instock,buyUnitPrice) => {
+const updateProductInstock = async (id,instock) => {
     return await productInstockModel.update(
         {
-            productId,
             instock,
-            buyUnitPrice
         },
         {
             where: {
@@ -34,8 +32,20 @@ const deleteProductInstock = async (id) => {
     )
 }
 
+const getProductInstocksByProductId = async (productId) => {
+    return await productInstockModel.findAll({
+        where: {
+            productId
+        },
+        order: [
+            ['createdAt', 'ASC'],
+        ],
+    })
+}
+
 module.exports = {
     createProductInstock,
     updateProductInstock,
-    deleteProductInstock
+    deleteProductInstock,
+    getProductInstocksByProductId
 }

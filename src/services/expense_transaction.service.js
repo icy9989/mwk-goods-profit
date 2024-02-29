@@ -1,4 +1,5 @@
 const ApiError = require("../config/customError.config");
+const { getExpenseById } = require("../database/providers/expense.provider");
 const { createExpenseTransaction, getExpenseTransactionById, updateExpenseTransaction, deleteExpenseTransaction, getExpenseTransactions } = require("../database/providers/expense_transaction.provider");
 
 const createExpenseTransactionService = async(reqBody) => {
@@ -66,7 +67,27 @@ const getExpenseTransactionsService = async(date) => {
 
     const transactions = await getExpenseTransactions(date);
 
-    return transactions;
+    const transactionList = [];
+
+    if(transactions.length < 1) {
+        return transactions;
+    } else {
+        for(let transaction of transactions) {
+            let data = {};
+            data.id = transaction.id;
+            const expense = await getExpenseById(transaction.expenseId);
+            data.expense = {
+                id: expense.id,
+                title: expense.title
+            },
+            data.amount = transaction.amount;
+            data.date = transaction.date;
+    
+            transactionList.push(data);
+        }
+
+        return transactionList
+    } 
 }
 
 module.exports = {

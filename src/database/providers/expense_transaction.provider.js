@@ -45,10 +45,19 @@ const getExpenseTransactions = async (date) => {
     });
 }
 
+getDailyTotalExpense = async (date) => {
+    return await expenseTransactionModel.sum('amount', {
+        where: {
+            date
+        }
+    })
+}
+
 module.exports = {
     createExpenseTransaction,
     getExpenseTransactionById,
     updateExpenseTransaction,
     deleteExpenseTransaction,
-    getExpenseTransactions
+    getExpenseTransactions,
+    getDailyTotalExpense
 }

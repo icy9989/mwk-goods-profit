@@ -10,6 +10,7 @@ const { productRouter } = require("./routes/product.route");
 const { saleTransactionRouter } = require("./routes/sale_transaction.route"); 
 const { expenseRouter } = require("./routes/expense.route");
 const { expenseTransactionRouter } = require("./routes/expense_transaction.route")
+const { dashboardRouter } = require("./routes/dashboard.route")
 
 const corsConfig = {
     origin: allowedOrigin,
@@ -33,6 +34,7 @@ productRouter(app);
 saleTransactionRouter(app);
 expenseRouter(app);
 expenseTransactionRouter(app);
+dashboardRouter(app);
 
 app.use(apiErrorHandler);
 
