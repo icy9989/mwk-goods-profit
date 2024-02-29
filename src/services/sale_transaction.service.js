@@ -1,3 +1,4 @@
+const ApiError = require("../config/customError.config");
 const { getProductById } = require("../database/providers/product.provider");
 const { createProductInstock, getProductInstocksByProductId, deleteProductInstock, updateProductInstock } = require("../database/providers/product_instock.provider");
 const { createSaleTransaction, getSaleTransactions } = require("../database/providers/sale_transaction.provider");
@@ -17,6 +18,11 @@ const createSaleTransactionService = async(reqBody) => {
     } = reqBody;
 
     const p = await getProductById(product.id);
+
+    if(!p) {
+        throw ApiError.badRequestError("ကုန်ပစ္စည်း မရှိပါ။")
+    }
+
     let profit;
     let result;
 
@@ -88,7 +94,12 @@ const createSaleTransactionService = async(reqBody) => {
             }
         })
 
+        if(instockList.length === 0) {
+            throw ApiError.badRequestError("လက်ကျန် မလောက်ပါ။")
+        }
+
         for(let instock of instockList) {
+            let index = 1;
             if(instock.count === num)
             {
                 totalCost += (num * instock.price);
@@ -154,9 +165,14 @@ const createSaleTransactionService = async(reqBody) => {
                 await updateProductInstock(instock.id, num);
                 return result;
             } else {
-                totalCost += (instock.count * instock.price);
-                num = num - instock.count;
-                await deleteProductInstock(instock.id);
+                if(index === instockList.length) {
+                    throw ApiError.badRequestError("လက်ကျန် မလောက်ပါ။")
+                } else {
+                    totalCost += (instock.count * instock.price);
+                    num = num - instock.count;
+                    await deleteProductInstock(instock.id);
+                }
+                index++;
             }
         }
     }
