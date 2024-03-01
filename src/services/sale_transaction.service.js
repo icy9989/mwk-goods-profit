@@ -1,7 +1,8 @@
 const ApiError = require("../config/customError.config");
 const { getProductById } = require("../database/providers/product.provider");
-const { createProductInstock, getProductInstocksByProductId, deleteProductInstock, updateProductInstock } = require("../database/providers/product_instock.provider");
-const { createSaleTransaction, getSaleTransactions } = require("../database/providers/sale_transaction.provider");
+const { createProductInstock, getProductInstocksByProductId, deleteProductInstock, updateProductInstock, getNotSaveProductInstocksByProductId } = require("../database/providers/product_instock.provider");
+const { createDailySaleTransaction } = require("../database/providers/profit.provider");
+const { createSaleTransaction, getSaleTransactions, updateSaleTransaction, getSaleTransactionById } = require("../database/providers/sale_transaction.provider");
 
 const createSaleTransactionService = async(reqBody) => {
 
@@ -83,7 +84,7 @@ const createSaleTransactionService = async(reqBody) => {
                 data.date = result.date;
                 return data;
             })
-        await createProductInstock(product.id,instock,buyUnitPrice);
+        await createProductInstock(product.id,instock,buyUnitPrice,instock,false);
     } else {
         let num = sellCount - buyCount;
         let totalCost = buyTotalPrice;
@@ -94,12 +95,15 @@ const createSaleTransactionService = async(reqBody) => {
             }
         })
 
-        if(instockList.length === 0) {
+        const sum = instockList.reduce((accumulator, object) => {
+            return accumulator + object.count;
+        },0)
+
+        if(instockList.length === 0 || sum < num) {
             throw ApiError.badRequestError("လက်ကျန် မလောက်ပါ။")
         }
 
         for(let instock of instockList) {
-            let index = 1;
             if(instock.count === num)
             {
                 totalCost += (num * instock.price);
@@ -130,7 +134,8 @@ const createSaleTransactionService = async(reqBody) => {
                         data.date = result.date;
                         return data;
                     })
-                await deleteProductInstock(instock.id);
+                await updateProductInstock(instock.id,0,false);
+                // await deleteProductInstock(instock.id);
                 return result;
             } else if(instock.count > num) {
                 totalCost += (num * instock.price);
@@ -162,17 +167,13 @@ const createSaleTransactionService = async(reqBody) => {
                         return data;
                     })
                 num = instock.count - num;
-                await updateProductInstock(instock.id, num);
+                await updateProductInstock(instock.id, num, false);
                 return result;
             } else {
-                if(index === instockList.length) {
-                    throw ApiError.badRequestError("လက်ကျန် မလောက်ပါ။")
-                } else {
                     totalCost += (instock.count * instock.price);
                     num = num - instock.count;
-                    await deleteProductInstock(instock.id);
-                }
-                index++;
+                    await updateProductInstock(instock.id,0,false);
+                    // await deleteProductInstock(instock.id);
             }
         }
     }
@@ -196,19 +197,244 @@ const updateSaleTransactionService = async(id,reqBody) => {
     } = reqBody;
 
     const p = await getProductById(product.id);
+
+    if(!id) {
+        throw ApiError.badRequestError("no transaction");
+    }
+
+    const transaction = await getSaleTransactionById(id);
+
+    if(!transaction) {
+        throw ApiError.badRequestError("no transaction");
+    }
+
+    if(!p) {
+        throw ApiError.badRequestError("ကုန်ပစ္စည်း မရှိပါ။")
+    }
+
     let profit;
+    let result;
 
     if(buyCount === sellCount) {
         profit = sellTotalPrice - buyTotalPrice; 
+        await updateSaleTransaction(id,
+            product.id,
+            buyCount,
+            buyUnitPrice,
+            buyTotalPrice,
+            sellCount,
+            sellUnitPrice,
+            sellTotalPrice,
+            profit,
+            date);
+        
+        result = await getSaleTransactionById(id).then((result) => {
+                const data = {};
+                data.id = result.id;
+                data.product = {
+                    id: p.id,
+                    name: p.name,
+                    percentage: p.percentage
+                }
+                data.buyCount = result.buyCount;
+                data.buyUnitPrice = result.buyUnitPrice;
+                data.buyTotalPrice = result.buyTotalPrice;
+                data.sellCount = result.sellCount;
+                data.sellUnitPrice = result.sellUnitPrice;
+                data.sellTotalPrice = result.sellTotalPrice;
+                data.profit = result.profit;
+                data.date = result.date;
+                return data;
+        })
+
+        const instockList = [];
+        await getNotSaveProductInstocksByProductId(product.id).then((results) => {
+            for (const result of results) {
+                instockList.push({ id: result.id, count: result.instock, tempCount: result.tempInstock });
+            }
+        })
+
+        if(instockList.length > 0) {
+            for(let instock of instockList) {
+                if(instock.count === instock.tempCount) {
+                    await deleteProductInstock(instock.id);
+                } else {
+                    await updateProductInstock(instock.id,instock.count,true);
+                }
+            }
+        }
+        
     } else if(buyCount > sellCount) {
         const instock = buyCount - sellCount;
         profit = sellTotalPrice - buyTotalPrice; 
-        await createProductInstock(product.id,instock,buyUnitPrice);
-    } else {
+        await updateSaleTransaction(id,
+            product.id,
+            buyCount,
+            buyUnitPrice,
+            buyTotalPrice,
+            sellCount,
+            sellUnitPrice,
+            sellTotalPrice,
+            profit,
+            date);
+        
+        result = await getSaleTransactionById(id).then((result) => {
+                const data = {};
+                data.id = result.id;
+                data.product = {
+                    id: p.id,
+                    name: p.name,
+                    percentage: p.percentage
+                }
+                data.buyCount = result.buyCount;
+                data.buyUnitPrice = result.buyUnitPrice;
+                data.buyTotalPrice = result.buyTotalPrice;
+                data.sellCount = result.sellCount;
+                data.sellUnitPrice = result.sellUnitPrice;
+                data.sellTotalPrice = result.sellTotalPrice;
+                data.profit = result.profit;
+                data.date = result.date;
+                return data;
+            })
 
+        const instockList = [];
+        await getNotSaveProductInstocksByProductId(product.id).then((results) => {
+            for (const result of results) {
+                instockList.push({ id: result.id, count: result.instock, tempCount: result.tempInstock });
+            }
+        })
+    
+        if(instockList.length > 0) {
+            for(let instock of instockList) {
+                if(instock.count === instock.tempCount) {
+                    await deleteProductInstock(instock.id);
+                } else {
+                    await updateProductInstock(instock.id,instock.count,true);
+                }
+            }
+        }  
+
+        await createProductInstock(product.id,instock,buyUnitPrice,instock,false);
+    } else {
+        let num = sellCount - buyCount;
+        let totalCost = buyTotalPrice;
+
+        const instockAllList = [];
+        await getProductInstocksByProductId(product.id).then((results) => {
+            for (const result of results) {
+                instockAllList.push({ id: result.id, count: result.instock, price: result.buyUnitPrice });
+            }
+        })
+
+        const sum = instockAllList.reduce((accumulator, object) => {
+            return accumulator + object.count;
+        },0)
+
+        if(instockAllList.length === 0 || sum < num) {
+            throw ApiError.badRequestError("လက်ကျန် မလောက်ပါ။")
+        }
+
+        const instockList = [];
+        await getNotSaveProductInstocksByProductId(product.id).then((results) => {
+            for (const result of results) {
+                instockList.push({ id: result.id, count: result.instock, tempCount: result.tempInstock });
+            }
+        })
+    
+        if(instockList.length > 0) {
+            for(let instock of instockList) {
+                if(instock.count === instock.tempCount) {
+                    await deleteProductInstock(instock.id);
+                } else {
+                    await updateProductInstock(instock.id,instock.count,true);
+                }
+            }
+        }  
+
+        for(let instock of instockAllList) {
+            if(instock.count === num)
+            {
+                totalCost += (num * instock.price);
+                profit = sellTotalPrice - totalCost;
+               
+                await updateSaleTransaction(id,
+                    product.id,
+                    buyCount,
+                    buyUnitPrice,
+                    buyTotalPrice,
+                    sellCount,
+                    sellUnitPrice,
+                    sellTotalPrice,
+                    profit,
+                    date);
+                
+                result = await getSaleTransactionById(id).then((result) => {
+                        const data = {};
+                        data.id = result.id;
+                        data.product = {
+                            id: p.id,
+                            name: p.name,
+                            percentage: p.percentage
+                        }
+                        data.buyCount = result.buyCount;
+                        data.buyUnitPrice = result.buyUnitPrice;
+                        data.buyTotalPrice = result.buyTotalPrice;
+                        data.sellCount = result.sellCount;
+                        data.sellUnitPrice = result.sellUnitPrice;
+                        data.sellTotalPrice = result.sellTotalPrice;
+                        data.profit = result.profit;
+                        data.date = result.date;
+                        return data;
+                    })
+
+                await updateProductInstock(instock.id,0,false);
+                // await deleteProductInstock(instock.id);
+                return result;
+            } else if(instock.count > num) {
+                totalCost += (num * instock.price);
+                profit = sellTotalPrice - totalCost;
+                await updateSaleTransaction(id,
+                    product.id,
+                    buyCount,
+                    buyUnitPrice,
+                    buyTotalPrice,
+                    sellCount,
+                    sellUnitPrice,
+                    sellTotalPrice,
+                    profit,
+                    date);
+                
+                result = await getSaleTransactionById(id).then((result) => {
+                        const data = {};
+                        data.id = result.id;
+                        data.product = {
+                            id: p.id,
+                            name: p.name,
+                            percentage: p.percentage
+                        }
+                        data.buyCount = result.buyCount;
+                        data.buyUnitPrice = result.buyUnitPrice;
+                        data.buyTotalPrice = result.buyTotalPrice;
+                        data.sellCount = result.sellCount;
+                        data.sellUnitPrice = result.sellUnitPrice;
+                        data.sellTotalPrice = result.sellTotalPrice;
+                        data.profit = result.profit;
+                        data.date = result.date;
+                        return data;
+                    })
+                num = instock.count - num;
+                await updateProductInstock(instock.id, num, false);
+                return result;
+            } else {
+                totalCost += (instock.count * instock.price);
+                num = num - instock.count;
+                await updateProductInstock(instock.id,0,false);
+                    // await deleteProductInstock(instock.id);
+            }
+        }
     }
 
-    return profit;
+    return result;
 
 }
 
@@ -245,9 +471,18 @@ const getSaleTransactionsService = async(date) => {
     return transactionList;
 } 
 
+const createDailySaleTransactionService = async(reqBody) => {
+
+   const { dailyCost, dailySell, dailyExpense, date } = reqBody;
+
+   const result = await createDailySaleTransaction(dailyCost,dailySell,dailyExpense,date);
+
+   return result;
+} 
 
 module.exports = {
     createSaleTransactionService,
     updateSaleTransactionService,
-    getSaleTransactionsService
+    getSaleTransactionsService,
+    createDailySaleTransactionService
 }

@@ -65,9 +65,13 @@ const getSaleTransactions = async (date) => {
     })
 }
 
+const getSaleTransactionById = async (id) => {
+    return await saleTransactionModel.findByPk(id);
+}
 
 module.exports = {
     createSaleTransaction,
     updateSaleTransaction,
-    getSaleTransactions
+    getSaleTransactions,
+    getSaleTransactionById
 }

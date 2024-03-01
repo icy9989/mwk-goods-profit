@@ -1,4 +1,6 @@
+const ApiError = require("../config/customError.config");
 const { getDailyTotalExpense } = require("../database/providers/expense_transaction.provider");
+const { getDailyTotalProfit } = require("../database/providers/profit.provider");
 
 const getDailyTotalExpenseService = async (date) => {
 
@@ -11,6 +13,21 @@ const getDailyTotalExpenseService = async (date) => {
     return total;
 }
 
+const getDailyTotalProfitService = async (date) => {
+
+    const result = await getDailyTotalProfit(date);
+
+    if(!result) {
+        throw ApiError.badRequestError("No daily total");
+    }
+
+    const profit = result.dailySell - result.dailyCost - result.dailyExpense;
+
+    return profit;
+}
+
+
 module.exports = { 
-    getDailyTotalExpenseService
+    getDailyTotalExpenseService,
+    getDailyTotalProfitService
 }

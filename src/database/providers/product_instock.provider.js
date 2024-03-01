@@ -1,18 +1,21 @@
 const db = require("../models");
 const productInstockModel = db.product_instock;
 
-const createProductInstock = async (productId,instock,buyUnitPrice) => {
+const createProductInstock = async (productId,instock,buyUnitPrice,tempInstock,isSave) => {
     return await productInstockModel.build({
         productId,
         instock,
-        buyUnitPrice
+        buyUnitPrice,
+        tempInstock,
+        isSave
     }).save()
 }
 
-const updateProductInstock = async (id,instock) => {
+const updateProductInstock = async (id,tempInstock,isSave) => {
     return await productInstockModel.update(
         {
-            instock,
+            tempInstock,
+            isSave
         },
         {
             where: {
@@ -43,9 +46,22 @@ const getProductInstocksByProductId = async (productId) => {
     })
 }
 
+const getNotSaveProductInstocksByProductId = async (productId) => {
+    return await productInstockModel.findAll({
+        where: {
+            productId,
+            isSave: false
+        },
+        order: [
+            ['createdAt', 'ASC'],
+        ],
+    })
+}
+
 module.exports = {
     createProductInstock,
     updateProductInstock,
     deleteProductInstock,
-    getProductInstocksByProductId
+    getProductInstocksByProductId,
+    getNotSaveProductInstocksByProductId
 }

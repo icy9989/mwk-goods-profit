@@ -23,10 +23,15 @@ module.exports = (sequelize, Sequelize) => {
         buyUnitPrice: {
             field: "buyUnitPrice",
             type: Sequelize.INTEGER,
+        },
+        tempInstock: {
+          field: "tempInstock",
+          type: Sequelize.DOUBLE,
+        },
+        isSave: {
+          field: "isSave",
+          type: Sequelize.BOOLEAN
         }
-      },
-      {
-        paranoid: true,
       }
     );
   

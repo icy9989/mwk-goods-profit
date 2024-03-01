@@ -44,8 +44,7 @@ const getExpenseTransactions = async (date) => {
         }
     });
 }
-
-getDailyTotalExpense = async (date) => {
+const getDailyTotalExpense = async (date) => {
     return await expenseTransactionModel.sum('amount', {
         where: {
             date
