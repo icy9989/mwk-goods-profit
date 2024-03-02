@@ -18,7 +18,7 @@ const getDailyTotalProfitService = async (date) => {
     const result = await getDailyTotalProfit(date);
 
     if(!result) {
-        throw ApiError.badRequestError("No daily total");
+        return 0;
     }
 
     const profit = result.dailySell - result.dailyCost - result.dailyExpense;
