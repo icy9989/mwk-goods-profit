@@ -1,6 +1,6 @@
 const ApiError = require("../config/customError.config");
 const { getProductById } = require("../database/providers/product.provider");
-const { createProductInstock, getProductInstocksByProductId, deleteProductInstock, updateProductInstock, getNotSaveProductInstocksByProductId } = require("../database/providers/product_instock.provider");
+const { createProductInstock, getProductInstocksByProductId, deleteProductInstock, updateProductInstock, getNotSaveProductInstocksByProductId, getNotSaveProductInstocks, getProductInstocks } = require("../database/providers/product_instock.provider");
 const { createDailySaleTransaction } = require("../database/providers/profit.provider");
 const { createSaleTransaction, getSaleTransactions, updateSaleTransaction, getSaleTransactionById } = require("../database/providers/sale_transaction.provider");
 
@@ -134,7 +134,7 @@ const createSaleTransactionService = async(reqBody) => {
                         data.date = result.date;
                         return data;
                     })
-                await updateProductInstock(instock.id,0,false);
+                await updateProductInstock(instock.id,instock.count,0,false);
                 // await deleteProductInstock(instock.id);
                 return result;
             } else if(instock.count > num) {
@@ -167,12 +167,12 @@ const createSaleTransactionService = async(reqBody) => {
                         return data;
                     })
                 num = instock.count - num;
-                await updateProductInstock(instock.id, num, false);
+                await updateProductInstock(instock.id, instock.count,num, false);
                 return result;
             } else {
                     totalCost += (instock.count * instock.price);
                     num = num - instock.count;
-                    await updateProductInstock(instock.id,0,false);
+                    await updateProductInstock(instock.id,instock.count,0,false);
                     // await deleteProductInstock(instock.id);
             }
         }
@@ -216,6 +216,23 @@ const updateSaleTransactionService = async(id,reqBody) => {
     let result;
 
     if(buyCount === sellCount) {
+        const instockList = [];
+        await getNotSaveProductInstocksByProductId(product.id).then((results) => {
+            for (const result of results) {
+                instockList.push({ id: result.id, count: result.instock, tempCount: result.tempInstock });
+            }
+        })
+
+        if(instockList.length > 0) {
+            for(let instock of instockList) {
+                if(instock.count === instock.tempCount) {
+                    await deleteProductInstock(instock.id);
+                } else {
+                    await updateProductInstock(instock.id,instock.count,instock.count,true);
+                }
+            }
+        }
+
         profit = sellTotalPrice - buyTotalPrice; 
         await updateSaleTransaction(id,
             product.id,
@@ -247,24 +264,25 @@ const updateSaleTransactionService = async(id,reqBody) => {
                 return data;
         })
 
+        
+    } else if(buyCount > sellCount) {
         const instockList = [];
         await getNotSaveProductInstocksByProductId(product.id).then((results) => {
             for (const result of results) {
                 instockList.push({ id: result.id, count: result.instock, tempCount: result.tempInstock });
             }
         })
-
+    
         if(instockList.length > 0) {
             for(let instock of instockList) {
                 if(instock.count === instock.tempCount) {
                     await deleteProductInstock(instock.id);
                 } else {
-                    await updateProductInstock(instock.id,instock.count,true);
+                    await updateProductInstock(instock.id,instock.count,instock.count,true);
                 }
             }
-        }
-        
-    } else if(buyCount > sellCount) {
+        }  
+
         const instock = buyCount - sellCount;
         profit = sellTotalPrice - buyTotalPrice; 
         await updateSaleTransaction(id,
@@ -297,6 +315,8 @@ const updateSaleTransactionService = async(id,reqBody) => {
                 return data;
             })
 
+        await createProductInstock(product.id,instock,buyUnitPrice,instock,false);
+    } else {
         const instockList = [];
         await getNotSaveProductInstocksByProductId(product.id).then((results) => {
             for (const result of results) {
@@ -309,13 +329,11 @@ const updateSaleTransactionService = async(id,reqBody) => {
                 if(instock.count === instock.tempCount) {
                     await deleteProductInstock(instock.id);
                 } else {
-                    await updateProductInstock(instock.id,instock.count,true);
+                    await updateProductInstock(instock.id,instock.count,instock.count,true);
                 }
             }
         }  
 
-        await createProductInstock(product.id,instock,buyUnitPrice,instock,false);
-    } else {
         let num = sellCount - buyCount;
         let totalCost = buyTotalPrice;
 
@@ -333,23 +351,6 @@ const updateSaleTransactionService = async(id,reqBody) => {
         if(instockAllList.length === 0 || sum < num) {
             throw ApiError.badRequestError("လက်ကျန် မလောက်ပါ။")
         }
-
-        const instockList = [];
-        await getNotSaveProductInstocksByProductId(product.id).then((results) => {
-            for (const result of results) {
-                instockList.push({ id: result.id, count: result.instock, tempCount: result.tempInstock });
-            }
-        })
-    
-        if(instockList.length > 0) {
-            for(let instock of instockList) {
-                if(instock.count === instock.tempCount) {
-                    await deleteProductInstock(instock.id);
-                } else {
-                    await updateProductInstock(instock.id,instock.count,true);
-                }
-            }
-        }  
 
         for(let instock of instockAllList) {
             if(instock.count === num)
@@ -387,7 +388,7 @@ const updateSaleTransactionService = async(id,reqBody) => {
                         return data;
                     })
 
-                await updateProductInstock(instock.id,0,false);
+                await updateProductInstock(instock.id,instock.count,0,false);
                 // await deleteProductInstock(instock.id);
                 return result;
             } else if(instock.count > num) {
@@ -423,12 +424,12 @@ const updateSaleTransactionService = async(id,reqBody) => {
                         return data;
                     })
                 num = instock.count - num;
-                await updateProductInstock(instock.id, num, false);
+                await updateProductInstock(instock.id, instock.count, num, false);
                 return result;
             } else {
                 totalCost += (instock.count * instock.price);
                 num = num - instock.count;
-                await updateProductInstock(instock.id,0,false);
+                await updateProductInstock(instock.id,instock.count,0,false);
                     // await deleteProductInstock(instock.id);
             }
         }
@@ -474,6 +475,31 @@ const getSaleTransactionsService = async(date) => {
 const createDailySaleTransactionService = async(reqBody) => {
 
    const { dailyCost, dailySell, dailyExpense, date } = reqBody;
+
+    const instockList = [];
+    await getNotSaveProductInstocks().then((results) => {
+        for (const result of results) {
+            instockList.push({ id: result.id, count: result.instock, tempCount: result.tempInstock });
+        }
+    })
+
+    if(instockList.length > 0) {
+        for(let instock of instockList) {
+            if(instock.count === instock.tempCount) {
+                await updateProductInstock(instock.id,instock.count,instock.tempCount,true);
+            } else {
+                await updateProductInstock(instock.id,instock.tempCount,instock.tempCount,true);
+            }
+        }
+    }   
+    
+    await getProductInstocks().then(async (results) => {
+        for (const result of results) {
+           if(result.instock === 0) {
+                await deleteProductInstock(result.id);
+           }
+        }
+    })
 
    const result = await createDailySaleTransaction(dailyCost,dailySell,dailyExpense,date);
 
