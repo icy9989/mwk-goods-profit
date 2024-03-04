@@ -1,3 +1,4 @@
+const { Op } = require("sequelize");
 const db = require("../models");
 const profitModel = db.profit;
 
@@ -22,7 +23,19 @@ const getDailyTotalProfit = (date) => {
     })
 }
 
+const getTotalProfitsByDate = (startDate, endDate) => {
+
+    return profitModel.findAll({
+        where: {
+            date: {
+                [Op.between]: [startDate, endDate]
+            }
+        }
+    })
+}
+
 module.exports = {
     createDailySaleTransaction,
-    getDailyTotalProfit
+    getDailyTotalProfit,
+    getTotalProfitsByDate
 }

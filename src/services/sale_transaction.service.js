@@ -1,7 +1,7 @@
 const ApiError = require("../config/customError.config");
 const { getProductById } = require("../database/providers/product.provider");
 const { createProductInstock, getProductInstocksByProductId, deleteProductInstock, updateProductInstock, getNotSaveProductInstocksByProductId, getNotSaveProductInstocks, getProductInstocks } = require("../database/providers/product_instock.provider");
-const { createDailySaleTransaction } = require("../database/providers/profit.provider");
+const { createDailySaleTransaction, getDailyTotalProfit } = require("../database/providers/profit.provider");
 const { createSaleTransaction, getSaleTransactions, updateSaleTransaction, getSaleTransactionById } = require("../database/providers/sale_transaction.provider");
 
 const createSaleTransactionService = async(reqBody) => {
@@ -506,9 +506,25 @@ const createDailySaleTransactionService = async(reqBody) => {
    return result;
 } 
 
+const isSaveDailySaleTransactionService = async (date) => {
+
+    const isSave = await getDailyTotalProfit(date);
+
+    if(isSave) {
+        return {
+            isSave: 1
+        }
+    } else {
+        return {
+            isSave: 0
+        }
+    }
+}
+
 module.exports = {
     createSaleTransactionService,
     updateSaleTransactionService,
     getSaleTransactionsService,
-    createDailySaleTransactionService
+    createDailySaleTransactionService,
+    isSaveDailySaleTransactionService
 }
