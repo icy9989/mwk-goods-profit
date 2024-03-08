@@ -476,6 +476,20 @@ const createDailySaleTransactionService = async(reqBody) => {
 
    const { dailyCost, dailySell, dailyExpense, date } = reqBody;
 
+   const today = new Date().toISOString().split('T')[0];
+
+    const dayBefore = () => {
+        let d = new Date();
+        d.setDate(d.getDate() - 1);
+        return d;
+    };
+
+    const yesterday = dayBefore().toISOString().split('T')[0];
+
+    if(date != today && date != yesterday) {
+        throw ApiError.badRequestError("သိမ်းဆည်း၍မရနိုင်ပါ။");
+    }
+
     const instockList = [];
     await getNotSaveProductInstocks().then((results) => {
         for (const result of results) {
