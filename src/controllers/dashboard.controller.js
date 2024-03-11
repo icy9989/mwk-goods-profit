@@ -1,5 +1,11 @@
 const { successResponse } = require("../config/response");
-const { getDailyTotalExpenseService, getDailyTotalProfitService, getMonthlyProfitsService } = require("../services/dashboard.service");
+const { 
+    getDailyTotalExpenseService, 
+    getDailyTotalProfitService, 
+    getMonthlyProfitsService, 
+    getMonthlyExpensesService, 
+    getMonthlyProductSellCountService
+} = require("../services/dashboard.service");
 
 const getDailyTotalExpenseController = async (req, res, next) => {
     try {
@@ -31,8 +37,30 @@ const getMonthlyProfitsController = async (req, res, next) => {
     }
 }
 
+const getMonthlyExpensesController = async (req, res, next) => {
+    try {
+        const { year,month } = req.query;
+        const data = await getMonthlyExpensesService(year,month);
+        res.status(200).send(successResponse(data));
+    } catch (err) {
+        next(err);
+    }
+}
+
+const getMonthlyProductSellCountController = async (req, res, next) => {
+    try {
+        const { year,month } = req.query;
+        const data = await getMonthlyProductSellCountService(year,month);
+        res.status(200).send(successResponse(data));
+    } catch (err) {
+        next(err);
+    }
+}
+
 module.exports = {
     getDailyTotalExpenseController,
     getDailyTotalProfitController,
-    getMonthlyProfitsController
+    getMonthlyProfitsController,
+    getMonthlyExpensesController,
+    getMonthlyProductSellCountController
 }

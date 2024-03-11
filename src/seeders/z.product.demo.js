@@ -45,7 +45,7 @@ module.exports = {
                 id: 5,
                 name: "ခရမ်းချဥ်သီး",
                 category_id: 1,
-                unit_id: 1,
+                unit_id: 2,
                 percentage: 50,
                 createdAt: new Date(),
                 updatedAt: new Date()
@@ -63,7 +63,7 @@ module.exports = {
                 id: 7,
                 name: "တရုတ်နံနံ",
                 category_id: 2,
-                unit_id: 2,
+                unit_id: 3,
                 percentage: 66,
                 createdAt: new Date(),
                 updatedAt: new Date()

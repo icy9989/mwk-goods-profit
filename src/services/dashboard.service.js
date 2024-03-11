@@ -1,6 +1,9 @@
 const ApiError = require("../config/customError.config");
-const { getDailyTotalExpense } = require("../database/providers/expense_transaction.provider");
+const { getExpenses } = require("../database/providers/expense.provider");
+const { getDailyTotalExpense, getExpenseTransactionsByExpenseId } = require("../database/providers/expense_transaction.provider");
+const { getProducts } = require("../database/providers/product.provider");
 const { getDailyTotalProfit, getTotalProfitsByDate } = require("../database/providers/profit.provider");
+const { getMonthlyProductSellCount } = require("../database/providers/sale_transaction.provider");
 
 const getDailyTotalExpenseService = async (date) => {
 
@@ -103,8 +106,49 @@ const getMonthlyProfitsService = async (year) => {
 
 }
 
+const getMonthlyExpensesService = async (year,month) => {
+
+    const { rows: expenses } = await getExpenses();
+
+    const results = [];
+
+    for(const expense of expenses) {
+        let records = await getExpenseTransactionsByExpenseId(expense.id,year,month);
+
+        data = {}
+        data.title = expense.title
+        data.amount = records ? records : 0
+        
+        results.push(data);
+    }
+
+    return results;
+}
+
+
+const getMonthlyProductSellCountService = async (year,month) => {
+
+    const { rows: products } = await getProducts();
+
+    const results = [];
+
+    for(const product of products) {
+        let records = await getMonthlyProductSellCount(product.id,year,month);
+
+        data = {}
+        data.name = product.name
+        data.quantity = records ? records : 0
+        
+        results.push(data);
+    }
+
+    return results;
+}
+
 module.exports = { 
     getDailyTotalExpenseService,
     getDailyTotalProfitService,
-    getMonthlyProfitsService
+    getMonthlyProfitsService,
+    getMonthlyExpensesService,
+    getMonthlyProductSellCountService
 }
