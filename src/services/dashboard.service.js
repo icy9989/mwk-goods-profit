@@ -122,6 +122,8 @@ const getMonthlyExpensesService = async (year,month) => {
         results.push(data);
     }
 
+    results.sort((a, b) => b.amount - a.amount);
+
     return results;
 }
 
@@ -141,6 +143,8 @@ const getMonthlyProductSellCountService = async (year,month) => {
         
         results.push(data);
     }
+
+    results.sort((a, b) => b.amount - a.amount);
 
     return results;
 }

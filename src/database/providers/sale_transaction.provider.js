@@ -104,7 +104,7 @@ const getMonthlyProductSellCount = async (productId, year, month) => {
             date: {
                 [Op.gte]: startDate,
                 [Op.lte]: endDate
-            }
+            },
         }
     })
 }
