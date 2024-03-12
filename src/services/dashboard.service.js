@@ -144,7 +144,7 @@ const getMonthlyProductSellCountService = async (year,month) => {
         results.push(data);
     }
 
-    results.sort((a, b) => b.amount - a.amount);
+    results.sort((a, b) => b.quantity - a.quantity);
 
     return results;
 }
