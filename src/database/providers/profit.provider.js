@@ -28,7 +28,7 @@ const getTotalProfitsByDate = (startDate, endDate) => {
     return profitModel.findAll({
         where: {
             date: {
-                [Op.between]: [startDate, endDate]
+                [Op.between]: [startDate,endDate]
             }
         }
     })
