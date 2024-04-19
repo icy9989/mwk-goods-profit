@@ -53,6 +53,16 @@ const getDailyTotalExpense = async (date) => {
     })
 }
 
+const getTotalExpensesByDate = async (startDate,endDate) => {
+    return await expenseTransactionModel.sum('amount', {
+        where: {
+            date: {
+                [Op.between]: [startDate,endDate]
+            }
+        }
+    })
+}
+
 const getExpenseTransactionsByExpenseId = async (expenseId, year, month) => {
 
     let startDate;
@@ -98,5 +108,6 @@ module.exports = {
     deleteExpenseTransaction,
     getExpenseTransactions,
     getDailyTotalExpense,
-    getExpenseTransactionsByExpenseId
+    getExpenseTransactionsByExpenseId,
+    getTotalExpensesByDate
 }

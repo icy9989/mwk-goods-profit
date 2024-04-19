@@ -1,13 +1,13 @@
 const ApiError = require("../config/customError.config");
 const { getExpenses } = require("../database/providers/expense.provider");
-const { getDailyTotalExpense, getExpenseTransactionsByExpenseId } = require("../database/providers/expense_transaction.provider");
+const { getExpenseTransactionsByExpenseId, getTotalExpensesByDate } = require("../database/providers/expense_transaction.provider");
 const { getProducts } = require("../database/providers/product.provider");
-const { getDailyTotalProfit, getTotalProfitsByDate } = require("../database/providers/profit.provider");
+const { getTotalProfitsByDate } = require("../database/providers/profit.provider");
 const { getMonthlyProductSellCount } = require("../database/providers/sale_transaction.provider");
 
-const getDailyTotalExpenseService = async (date) => {
+const getDailyTotalExpenseService = async (startDate, endDate) => {
 
-    const total = await getDailyTotalExpense(date);
+    const total = await getTotalExpensesByDate(startDate, endDate);
 
     if(!total) {
         return 0;
@@ -16,15 +16,15 @@ const getDailyTotalExpenseService = async (date) => {
     return total;
 }
 
-const getDailyTotalProfitService = async (date) => {
+const getDailyTotalProfitService = async (startDate,endDate) => {
 
-    const result = await getDailyTotalProfit(date);
+    let profit = 0;
 
-    if(!result) {
-        return 0;
+    const records = await getTotalProfitsByDate(startDate, endDate);
+        
+    for(const record of records) { 
+        profit += record.dailySell - record.dailyCost - record.dailyExpense;
     }
-
-    const profit = result.dailySell - result.dailyCost - result.dailyExpense;
 
     return profit;
 }

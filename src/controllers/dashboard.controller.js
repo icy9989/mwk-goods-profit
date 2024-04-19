@@ -9,8 +9,8 @@ const {
 
 const getDailyTotalExpenseController = async (req, res, next) => {
     try {
-        const { date } = req.query;
-        const data = await getDailyTotalExpenseService(date);
+        const { startDate, endDate } = req.query;
+        const data = await getDailyTotalExpenseService(startDate, endDate);
         res.status(200).send(successResponse(data));
     } catch (err) {
         next(err);
@@ -19,8 +19,8 @@ const getDailyTotalExpenseController = async (req, res, next) => {
 
 const getDailyTotalProfitController = async (req, res, next) => {
     try {
-        const { date } = req.query;
-        const data = await getDailyTotalProfitService(date);
+        const { startDate, endDate } = req.query;
+        const data = await getDailyTotalProfitService(startDate,endDate);
         res.status(200).send(successResponse(data));
     } catch (err) {
         next(err);
